@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مسابقة سؤال/جواب</title>
+<link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;900&display=swap">
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -19,6 +20,7 @@ body{
     color:white;
     background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), 
                 url('mor.jpg') no-repeat center center/cover;
+    padding: 0 15px;
 }
 body.success-bg{animation: moveBackground .5s linear ;}
 @keyframes moveBackground{
@@ -26,7 +28,10 @@ body.success-bg{animation: moveBackground .5s linear ;}
     50% {background-position: center center;}
     100% {background-position: center bottom;}
 }
-.container{padding:0 15px; z-index:2; position:relative; max-width:700px;}
+.container{padding:15px; z-index:2; position:relative; max-width:100%;width: 1400px;background-color: rgba(0, 0, 0, .4);
+    border-radius: 15px;
+    box-shadow: 0 0 15px 0px white, 0 0 15px 0px white;
+}
 button{background-color:rgb(216, 7, 18);padding:7px 30px;color:rgb(26, 136, 4);border-radius:5px;font-size:22px;font-weight:900;transition:.3s ease;border:none;cursor:pointer;margin:10px;}
 button:hover {
     box-shadow:
@@ -91,11 +96,19 @@ button:hover {
     width:150px;
     position: absolute;
     top:50%; /* البداية خارج الشاشة */
-    left:55px;
+    left:550px;
     transform: translateX(-50%);
     transform: translateY(-50%);
 }
+#quiz > div:nth-child(2){
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1;
+}
 
+#quiz > div:nth-child(2) button{
+    flex: auto;
+}
 </style>
 </head>
 <body>

@@ -15,10 +15,15 @@ body{
                 url('mor.jpg') no-repeat center center/cover;
     transition: background 1s ease-in-out;
     color: white;
+    padding: 0 20px;
 }
 
 .container{
     padding: 0 15px;
+    z-index: 2;
+    position: relative;
+    width: 1400px;
+    max-width: 100%;
 }
 
 .container h1{
@@ -97,3 +102,4 @@ button{
 button:hover{
     box-shadow: 0 0 30px 13px rgba(2,0,36,1);
 }
+
