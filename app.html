@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مسابقة سؤال/جواب</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;900&display=swap">
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select: none;}
+body{
+    font-family:'Cairo',sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    text-align:center;
+    color:white;
+    background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), 
+                url('mor.jpg') no-repeat center center/cover;
+}
+body.success-bg{animation: moveBackground .5s linear ;}
+@keyframes moveBackground{
+    0% {background-position: center top;}
+    50% {background-position: center center;}
+    100% {background-position: center bottom;}
+}
+.container{padding:0 15px; z-index:2; position:relative; max-width:700px;}
+button{background-color:rgb(216, 7, 18);padding:7px 30px;color:rgb(26, 136, 4);border-radius:5px;font-size:22px;font-weight:900;transition:.3s ease;border:none;cursor:pointer;margin:10px;}
+button:hover {
+    box-shadow:
+        15px 0 25px green,   /* يمين أخضر */
+       -15px 0 25px red;     /* يسار أحمر */
+}
+.correct{background-color:green;color:rgb(221, 11, 11);}
+.incorrect{background-color:red;color:rgb(14, 114, 5);}
+.animate-correct{animation: glowGreen 0.8s ease-in-out;}
+.animate-incorrect{animation: glowRed 0.8s ease-in-out;}
+@keyframes glowGreen{0%{box-shadow:0 0 0px green;transform:scale(1);}50%{box-shadow:0 0 15px green;transform:scale(1.1);}100%{box-shadow:0 0 0px green;transform:scale(1);}}
+@keyframes glowRed{0%{box-shadow:0 0 0px red;transform:scale(1);}50%{box-shadow:0 0 15px red;transform:scale(1.1);}100%{box-shadow:0 0 0px red;transform:scale(1);}}
+.success-animation{animation: confettiText 1.5s ease-in-out;}
+@keyframes confettiText{0%{transform:scale(0);opacity:0;}50%{transform:scale(1.2);opacity:1;}100%{transform:scale(1);opacity:1;}}
+.fail-animation{animation: shake 0.8s ease-in-out;}
+@keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-10px);}50%{transform:translateX(10px);}75%{transform:translateX(-10px);}100%{transform:translateX(0);}}
+.retour{
+    text-decoration: none;
+    background-color:red ;
+    padding: 7px 30px;
+    color: green;
+    border-radius: 5px;
+    font-size: 22px;
+    font-weight: 900;
+    transition:.3s ease;
+}
+.retour:hover{
+     box-shadow:
+        15px 0 25px green,   /* يمين أخضر */
+       -15px 0 25px red;     /* يسار أحمر */
+}
+/* صندوق النتيجة */
+.result-box{
+    text-align:center;
+    padding:40px;
+    border-radius:20px;
+    color:white;
+    margin-top:20px;
+}
+
+/* نجاح */
+.success{
+    background: linear-gradient(45deg, #00c853, #69f0ae);
+    box-shadow: 0 0 40px rgba(0,200,83,0.8);
+    animation: success-animation 1.5s ease-in-out;
+}
+
+/* فشل */
+.fail{
+    background: linear-gradient(45deg, #d50000, #ff5252);
+    box-shadow: 0 0 40px rgba(213,0,0,0.8);
+}
+
+/* صورة شخصية تسقط */
+.falling-character{
+    position: relative;
+    height: 200px;
+    /*overflow: hidden;*/
+}
+
+.fail-img{
+    width:150px;
+    position: absolute;
+    top:50%; /* البداية خارج الشاشة */
+    left:55px;
+    transform: translateX(-50%);
+    transform: translateY(-50%);
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz"></div>
+    <button class="next">السؤال التالي</button>
+    <div id="timer"></div>
+
+    <!-- أصوات -->
+    <audio id="sound-correct" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+    <audio id="sound-wrong" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+</div>
+
+<script>
+// ------------------------- JavaScript ------------------------
+let next = document.querySelector(".next");
+let answer = document.createElement("div");
+let counter = 0;
+let score = 0;
+let correctStreak = 0;
+let timer;
+let timePerQuestion = 15;
+let timeLeft = timePerQuestion;
+
+const soundCorrect = document.getElementById("sound-correct");
+const soundWrong = document.getElementById("sound-wrong");
+
+const question = [
+    { qText:"ما معنى الصدق؟",
+      aOption:[
+        {answerText:"قول الكذب",isCorrecte:false},
+        {answerText:"قول الحقيقة",isCorrecte:true},
+        {answerText:"إخفاء الأشياء",isCorrecte:false},
+        {answerText:"الضحك فقط",isCorrecte:false}
+      ]
+    },
+
+    { qText:"أي سلوك يدل على الأمانة؟",
+      aOption:[
+        {answerText:"إرجاع الشيء لصاحبه",isCorrecte:true},
+        {answerText:"أخذ ما ليس لي",isCorrecte:false},
+        {answerText:"الكذب",isCorrecte:false},
+        {answerText:"إهمال الواجب",isCorrecte:false}
+      ]
+    },
+
+    { qText:"كيف نتصرف مع المعلم؟",
+      aOption:[
+        {answerText:"نقاطعه",isCorrecte:false},
+        {answerText:"نحترمه",isCorrecte:true},
+        {answerText:"نسخر منه",isCorrecte:false},
+        {answerText:"نصرخ",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ما عكس الكرم؟",
+      aOption:[
+        {answerText:"التعاون",isCorrecte:false},
+        {answerText:"الاحترام",isCorrecte:false},
+        {answerText:"البخل",isCorrecte:true},
+        {answerText:"الصدق",isCorrecte:false}
+      ]
+    },
+
+    { qText:"عندما أرى صديقًا حزينًا، ماذا أفعل؟",
+      aOption:[
+        {answerText:"أضحك عليه",isCorrecte:false},
+        {answerText:"أساعده",isCorrecte:true},
+        {answerText:"أتجاهله",isCorrecte:false},
+        {answerText:"أهرب",isCorrecte:false}
+      ]
+    },
+
+    { qText:"أي كلمة نقولها عند الشكر؟",
+      aOption:[
+        {answerText:"آسف",isCorrecte:false},
+        {answerText:"من فضلك",isCorrecte:false},
+        {answerText:"شكرا",isCorrecte:true},
+        {answerText:"لا",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ما أثر التعاون؟",
+      aOption:[
+        {answerText:"الفوضى",isCorrecte:false},
+        {answerText:"النجاح",isCorrecte:true},
+        {answerText:"الكسل",isCorrecte:false},
+        {answerText:"المشاكل",isCorrecte:false}
+      ]
+    },
+
+    { qText:"إذا أخطأت ماذا أقول؟",
+      aOption:[
+        {answerText:"لا يهم",isCorrecte:false},
+        {answerText:"آسف",isCorrecte:true},
+        {answerText:"ليس خطئي",isCorrecte:false},
+        {answerText:"أضحك",isCorrecte:false}
+      ]
+    },
+
+    { qText:"أي خلق يدل على التسامح؟",
+      aOption:[
+        {answerText:"الحقد",isCorrecte:false},
+        {answerText:"الغضب",isCorrecte:false},
+        {answerText:"العفو",isCorrecte:true},
+        {answerText:"الانتقام",isCorrecte:false}
+      ]
+    },
+
+    { qText:"كيف نتصرف في الصف؟",
+      aOption:[
+        {answerText:"نصرخ",isCorrecte:false},
+        {answerText:"نلتزم بالنظام",isCorrecte:true},
+        {answerText:"نلعب فقط",isCorrecte:false},
+        {answerText:"نتشاجر",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ماذا نفعل إذا وجدنا نقودًا ليست لنا؟",
+      aOption:[
+        {answerText:"نأخذها",isCorrecte:false},
+        {answerText:"نبحث عن صاحبها",isCorrecte:true},
+        {answerText:"نرميها",isCorrecte:false},
+        {answerText:"نخفيها",isCorrecte:false}
+      ]
+    },
+
+    { qText:"أي صفة يحبها الله؟",
+      aOption:[
+        {answerText:"الظلم",isCorrecte:false},
+        {answerText:"الصدق",isCorrecte:true},
+        {answerText:"الكذب",isCorrecte:false},
+        {answerText:"الحسد",isCorrecte:false}
+      ]
+    },
+
+    { qText:"كيف نتعامل مع الجيران؟",
+      aOption:[
+        {answerText:"بإزعاجهم",isCorrecte:false},
+        {answerText:"باحترامهم",isCorrecte:true},
+        {answerText:"بالسخرية",isCorrecte:false},
+        {answerText:"بتجاهلهم",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ما نتيجة الكذب؟",
+      aOption:[
+        {answerText:"فقدان الثقة",isCorrecte:true},
+        {answerText:"المحبة",isCorrecte:false},
+        {answerText:"النجاح",isCorrecte:false},
+        {answerText:"الاحترام",isCorrecte:false}
+      ]
+    },
+
+    { qText:"أي تصرف صحيح؟",
+      aOption:[
+        {answerText:"ضرب الآخرين",isCorrecte:false},
+        {answerText:"مساعدة المحتاج",isCorrecte:true},
+        {answerText:"إهانة الصديق",isCorrecte:false},
+        {answerText:"الكذب",isCorrecte:false}
+      ]
+    },
+
+    { qText:"كيف نحافظ على المدرسة؟",
+      aOption:[
+        {answerText:"نرمي الأوساخ",isCorrecte:false},
+        {answerText:"نحافظ على نظافتها",isCorrecte:true},
+        {answerText:"نكسر الطاولات",isCorrecte:false},
+        {answerText:"نكتب على الجدران",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ما معنى الاحترام؟",
+      aOption:[
+        {answerText:"تقدير الآخرين",isCorrecte:true},
+        {answerText:"السخرية",isCorrecte:false},
+        {answerText:"الإهانة",isCorrecte:false},
+        {answerText:"الغضب",isCorrecte:false}
+      ]
+    },
+
+    { qText:"إذا طلب منك صديق مساعدة، ماذا تفعل؟",
+      aOption:[
+        {answerText:"أرفض دائمًا",isCorrecte:false},
+        {answerText:"أساعده",isCorrecte:true},
+        {answerText:"أسخر منه",isCorrecte:false},
+        {answerText:"أغضب",isCorrecte:false}
+      ]
+    },
+
+    { qText:"ما أثر الأخلاق الحسنة؟",
+      aOption:[
+        {answerText:"المحبة بين الناس",isCorrecte:true},
+        {answerText:"الكراهية",isCorrecte:false},
+        {answerText:"الخوف",isCorrecte:false},
+        {answerText:"الحزن",isCorrecte:false}
+      ]
+    },
+
+    { qText:"لماذا نتحلى بمكارم الأخلاق؟",
+      aOption:[
+        {answerText:"لنكون قدوة حسنة",isCorrecte:true},
+        {answerText:"لنؤذي الآخرين",isCorrecte:false},
+        {answerText:"لنغضب الناس",isCorrecte:false},
+        {answerText:"للتفاخر فقط",isCorrecte:false}
+      ]
+    }
+];
+
+function dis(){
+    clearInterval(timer);
+    timeLeft = timePerQuestion;
+    startTimer();
+    answer.innerHTML = "";
+    const quiz = document.getElementById("quiz");
+    if(counter < question.length){
+        const q = question[counter];
+        const ele = document.createElement("div");
+        ele.innerHTML = `<h1 style="font-size:32px;">سؤال ${counter+1} من ${question.length}</h1>
+                         <h2 style="font-size:22px;margin-bottom:60px;margin-top:20px;">${q.qText}</h2>`;
+        q.aOption.forEach(opt=>{
+            const btn = document.createElement("button");
+            btn.innerHTML = opt.answerText;
+            if(opt.isCorrecte) btn.dataset.isCorrecte = true;
+            btn.addEventListener("click", checkAnswer);
+            answer.appendChild(btn);
+        });
+        quiz.innerHTML = "";
+        quiz.appendChild(ele);
+        quiz.appendChild(answer);
+    } else {
+        clearInterval(timer); // لإيقاف المؤقت تمامًا عند النتيجة
+        const timerDiv = document.getElementById("timer");
+        next.style.display = "none"; // إخفاء زر التالي
+        timerDiv.remove();           // إزالة عداد الوقت
+        const isPassed = score >= 10;
+
+        quiz.innerHTML = `
+            <div class="result-box ${isPassed ? "success" : "fail"}">
+                <h1>النتيجة هي ${score}/${question.length}</h1>
+
+                ${isPassed 
+                    ?  `<div class="falling-character">
+                          <img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" alt="فوز" class="fail-img">
+                      </div>` 
+                    : `<div class="falling-character">
+                          <img src="https://media.giphy.com/media/3o6Zt6ML6BklcajjsA/giphy.gif" alt="حزين" class="fail-img">
+                      </div>`
+                }
+
+                <a href="" class="retour">إعادة الاختبار</a>
+            </div>
+        `;
+}
+}
+
+// ------------------------- دالة تحقق الإجابة ------------------------
+function checkAnswer(e){
+    clearInterval(timer);
+    const selectBtn = e.target;
+    const correct = selectBtn.dataset.isCorrecte === "true";
+
+    if(correct){
+        swal("الجواب صحيح","","success");
+        selectBtn.classList.add("correct","animate-correct");
+        soundCorrect.play();
+        score++;
+        correctStreak++;
+
+        // Confetti متعدد الألوان ومتدرج حسب الإجابات الصحيحة المتتالية
+        const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1b9', '#f9bec7', '#f7cad0', '#fae0e4', '#b5ead7', '#9ae3d4'];
+        confetti({particleCount:100 + correctStreak*20, spread:70, origin:{y:0.5}, colors: colors});
+        document.body.classList.add("success-bg");
+        setTimeout(()=> document.body.classList.remove("success-bg"),1000);
+
+    } else{
+        swal("الجواب خاطئ","","error");
+        selectBtn.classList.add("incorrect","animate-incorrect");
+        soundWrong.play();
+        correctStreak = 0;
+    }
+
+    Array.from(answer.children).forEach(b=>{
+        if(b.dataset.isCorrecte==="true") b.classList.add("correct","animate-correct");
+        b.disabled = true;
+    });
+}
+
+// ------------------------- زر التالي ------------------------
+next.addEventListener("click", ()=>{
+    counter++;
+    dis();
+});
+
+// ------------------------- عداد الوقت ------------------------
+function startTimer(){
+    const timerDiv = document.getElementById("timer");
+    timerDiv.textContent = `الوقت المتبقي: ${timeLeft} ثانية`;
+    timer = setInterval(()=>{
+        timeLeft--;
+        timerDiv.textContent = `الوقت المتبقي: ${timeLeft} ثانية`;
+        if(timeLeft<=0){
+            clearInterval(timer);
+            swal("انتهى الوقت!","","warning");
+            correctStreak = 0;
+            Array.from(answer.children).forEach(b=>{
+                if(b.dataset.isCorrecte==="true") b.classList.add("correct","animate-correct");
+                b.disabled = true;
+            });
+        }
+    },1000);
+}
+
+// ------------------------- بدء الاختبار ------------------------
+dis();
+</script>
+</body>
+</html>
