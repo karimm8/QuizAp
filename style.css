@@ -29,9 +29,9 @@ body{
 
 .container a{
     text-decoration: none;
-    background-color:rgba(9,9,121,1) ;
+    background-color:red ;
     padding: 7px 30px;
-    color: rgba(2,0,36,1);
+    color: green;
     border-radius: 5px;
     font-size: 22px;
     font-weight: 900;
@@ -39,13 +39,15 @@ body{
 }
 
 .container a:hover , .container p:hover{
-    box-shadow: 0 0 30px 13px rgba(2,0,36,1);
+     box-shadow:
+        15px 0 25px green,   /* يمين أخضر */
+       -15px 0 25px red;     /* يسار أحمر */
 }
 
 .container p{
-    background-color:rgba(9,9,121,1) ;
+    background-color:red ;
     padding: 7px 30px;
-    color: rgba(2,0,36,1);
+    color: green;
     border-radius: 5px;
     font-size: 22px;
     font-weight: 900;
