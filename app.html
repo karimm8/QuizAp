@@ -91,16 +91,21 @@ button:hover {
 
 /* صورة شخصية تسقط */
 .falling-character{
+    margin-top: 20px;
+    width: 100%;
     position: relative;
     height: 200px;
-    /*overflow: hidden;*/
+    /* overflow: hidden; */
+    display: flex;
+    justify-content: center;
+    align-items: self-end;
 }
 
 .fail-img{
-    width:180px;
-    position: absolute;
-    top:50%; /* البداية خارج الشاشة */
-    left:550px;
+   width: 180px;
+  /* position: absolute; */
+  top: 50%;
+    left: 550px;
     transform: translateX(-50%);
     transform: translateY(-50%);
 }
